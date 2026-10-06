@@ -11,6 +11,8 @@ final class ItineraryViewModel {
     var selectedDay: Day?
     var route: DayRoute?
     var errorMessage: String?
+    /// True when `route` came from the offline cache because calculating a fresh one failed.
+    private(set) var isShowingCachedRoute = false
 
     /// Shared so its leg cache survives switching between days.
     private let routeService = RouteService()
@@ -24,16 +26,29 @@ final class ItineraryViewModel {
     func loadRoute() async {
         guard let day = selectedDay else {
             route = nil
+            isShowingCachedRoute = false
             return
         }
         // Snapshots are taken here on the main actor; only these Sendable copies go to the service.
         let stops = day.mappableStops
         do throws(ItineraryError) {
-            route = try await routeService.route(for: stops)
+            let freshRoute = try await routeService.route(for: stops)
+            route = freshRoute
             errorMessage = nil
+            isShowingCachedRoute = false
+            // Keep the latest good route for when there's no connection. SwiftData autosaves it.
+            day.cacheRoute(freshRoute)
         } catch {
-            route = nil
-            errorMessage = error.localizedDescription
+            // Usually this means no connection, so fall back to the last saved route if it still fits the day.
+            if let cachedRoute = day.cachedRoute(for: stops) {
+                route = cachedRoute
+                errorMessage = nil
+                isShowingCachedRoute = true
+            } else {
+                route = nil
+                errorMessage = error.localizedDescription
+                isShowingCachedRoute = false
+            }
         }
     }
 

@@ -37,6 +37,12 @@ struct DayRouteMapView: View {
                 }
             }
         }
+        .safeAreaInset(edge: .top) {
+            // Hidden while loading, since the flag still describes the previous result until loading finishes.
+            if viewModel.isShowingCachedRoute && !isLoading {
+                offlineBanner
+            }
+        }
         .navigationTitle(viewModel.selectedDay.map { "Day \($0.number) Route" } ?? "Route")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
@@ -62,6 +68,17 @@ struct DayRouteMapView: View {
         .onDisappear {
             isShowingLegs = false
         }
+    }
+
+    /// Shown above the map when the route came from the offline cache.
+    private var offlineBanner: some View {
+        Label("Offline: showing the last saved route", systemImage: "wifi.slash")
+            .font(.footnote.weight(.semibold))
+            .foregroundStyle(Color("Warning"))
+            .padding(.horizontal, 12)
+            .padding(.vertical, 8)
+            .background(Color("WarningSoft"), in: Capsule())
+            .padding(.top, 8)
     }
 
     /// The bottom sheet: totals, any error, and one row per leg.
