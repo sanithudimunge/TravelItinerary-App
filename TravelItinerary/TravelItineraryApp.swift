@@ -36,9 +36,22 @@ struct TravelItineraryApp: App {
         return container
     }()
 
+    /// Admin state shared by every screen through the environment.
+    @State private var session = SessionStore()
+
+    init() {
+        // First launch only: store the demo admin PIN so admin mode can be unlocked (see KeychainStore).
+        do {
+            try KeychainStore().setDefaultPINIfNeeded()
+        } catch {
+            print("Couldn't set the default admin PIN: \(error)")
+        }
+    }
+
     var body: some Scene {
         WindowGroup {
-            TripListView()
+            RootView()
+                .environment(session)
         }
         .modelContainer(sharedModelContainer)
     }

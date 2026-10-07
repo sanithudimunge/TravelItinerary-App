@@ -21,7 +21,12 @@ extension ItineraryError: LocalizedError {
         case .routeUnavailable:
             "A route couldn't be found between these stops."
         case .incorrectPIN(let attemptsLeft):
-            attemptsLeft == 1 ? "Incorrect PIN. 1 attempt left." : "Incorrect PIN. \(attemptsLeft) attempts left."
+            switch attemptsLeft {
+            // No attempts left means SessionStore has locked admin mode until the app is relaunched.
+            case ...0: "Too many incorrect attempts. Admin mode is locked."
+            case 1: "Incorrect PIN. 1 attempt left."
+            default: "Incorrect PIN. \(attemptsLeft) attempts left."
+            }
         }
     }
 }
