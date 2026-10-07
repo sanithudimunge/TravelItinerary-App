@@ -92,6 +92,9 @@ struct ItineraryView: View {
                         ActivityRow(activity: activity)
                     }
                     .tint(.primary)
+                    // By default the separator starts at the title text, past the category icon.
+                    // Start it at the row's leading edge instead, matching PlacesView.
+                    .alignmentGuide(.listRowSeparatorLeading) { _ in 0 }
                     .contextMenu {
                         // Only offered when the activity has a valid location to hand off.
                         if let stop = activity.snapshot() {
