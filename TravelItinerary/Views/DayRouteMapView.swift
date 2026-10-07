@@ -77,7 +77,11 @@ struct DayRouteMapView: View {
             .foregroundStyle(Color("Warning"))
             .padding(.horizontal, 12)
             .padding(.vertical, 8)
-            .background(Color("WarningSoft"), in: Capsule())
+            // A rounded rectangle rather than a capsule: at large text sizes the banner wraps onto
+            // several lines, and a capsule's round ends would cut into the text.
+            .background(Color("WarningSoft"), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+            // Keep the banner inside the screen margins so long text wraps instead of running off the edge.
+            .padding(.horizontal)
             .padding(.top, 8)
     }
 

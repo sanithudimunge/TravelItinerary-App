@@ -34,7 +34,9 @@ struct StatusBadge: View {
     var body: some View {
         // An HStack rather than a Label: inside List rows a Label can be squeezed down to its icon only.
         HStack(spacing: 4) {
+            // Decorative: the title already says what the icon means.
             Image(systemName: status.systemImage)
+                .accessibilityHidden(true)
             Text(status.title)
         }
         .font(.caption.weight(.semibold))

@@ -5,10 +5,13 @@ import SwiftUI
 struct LegRow: View {
     let leg: RouteLeg
 
+    /// Width of the mode icon column. Scales with Dynamic Type so the icon isn't clipped.
+    @ScaledMetric(relativeTo: .subheadline) private var iconWidth: CGFloat = 28
+
     var body: some View {
         HStack(spacing: 12) {
             Image(systemName: leg.mode.symbolName)
-                .frame(width: 28)
+                .frame(width: iconWidth)
                 .foregroundStyle(.secondary)
                 .accessibilityHidden(true)
 

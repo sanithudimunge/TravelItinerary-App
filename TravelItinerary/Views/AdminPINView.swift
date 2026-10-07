@@ -9,39 +9,49 @@ struct AdminPINView: View {
 
     private let pinLength = 4
 
+    // Sizes scale with Dynamic Type. The key size is capped so three keys plus spacing
+    // still fit across the narrowest iPhone at the largest accessibility sizes.
+    @ScaledMetric(relativeTo: .title) private var scaledKeySize: CGFloat = 80
+    @ScaledMetric(relativeTo: .body) private var dotSize: CGFloat = 14
+    private var keySize: CGFloat { min(scaledKeySize, 96) }
+
     /// Keypad layout. Empty strings are spacers; "⌫" deletes the last digit.
     private let keys = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "", "0", "⌫"]
 
     var body: some View {
         NavigationStack {
-            VStack(spacing: 32) {
-                Text("Enter the admin PIN")
-                    .font(.headline)
+            // Scrolls only when the content is taller than the screen, e.g. at the largest text sizes.
+            ScrollView {
+                VStack(spacing: 32) {
+                    Text("Enter the admin PIN")
+                        .font(.headline)
 
-                // One dot per digit; filled dots show how many have been typed.
-                HStack(spacing: 16) {
-                    ForEach(0..<pinLength, id: \.self) { index in
-                        Circle()
-                            .fill(index < entry.count ? Color.primary : Color.clear)
-                            .stroke(Color.primary, lineWidth: 1.5)
-                            .frame(width: 14, height: 14)
+                    // One dot per digit; filled dots show how many have been typed.
+                    HStack(spacing: 16) {
+                        ForEach(0..<pinLength, id: \.self) { index in
+                            Circle()
+                                .fill(index < entry.count ? Color.primary : Color.clear)
+                                .stroke(Color.primary, lineWidth: 1.5)
+                                .frame(width: dotSize, height: dotSize)
+                        }
                     }
-                }
-                .accessibilityElement()
-                .accessibilityLabel("\(entry.count) of \(pinLength) digits entered")
+                    .accessibilityElement()
+                    .accessibilityLabel("\(entry.count) of \(pinLength) digits entered")
 
-                if let errorMessage {
-                    InlineError(message: errorMessage)
-                }
-
-                LazyVGrid(columns: Array(repeating: GridItem(.fixed(80), spacing: 24), count: 3), spacing: 16) {
-                    ForEach(keys, id: \.self) { key in
-                        keyButton(key)
+                    if let errorMessage {
+                        InlineError(message: errorMessage)
                     }
+
+                    LazyVGrid(columns: Array(repeating: GridItem(.fixed(keySize), spacing: 20), count: 3), spacing: 16) {
+                        ForEach(keys, id: \.self) { key in
+                            keyButton(key)
+                        }
+                    }
+                    .disabled(session.isLockedOut)
                 }
-                .disabled(session.isLockedOut)
+                .padding()
             }
-            .padding()
+            .scrollBounceBehavior(.basedOnSize)
             .navigationTitle("Administrator")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -61,14 +71,15 @@ struct AdminPINView: View {
     @ViewBuilder
     private func keyButton(_ key: String) -> some View {
         if key.isEmpty {
-            Color.clear.frame(width: 80, height: 80)
+            Color.clear.frame(width: keySize, height: keySize)
+                .accessibilityHidden(true)
         } else {
             Button {
                 press(key)
             } label: {
                 Text(key)
                     .font(.title)
-                    .frame(width: 80, height: 80)
+                    .frame(width: keySize, height: keySize)
                     .background(.fill.tertiary, in: Circle())
             }
             .buttonStyle(.plain)
@@ -98,6 +109,8 @@ struct AdminPINView: View {
             errorMessage = error.localizedDescription
             // Clear the dots so the next attempt starts fresh.
             entry = ""
+            // VoiceOver doesn't read new text on its own, so announce why the entry was cleared.
+            AccessibilityNotification.Announcement(error.localizedDescription).post()
         }
     }
 }

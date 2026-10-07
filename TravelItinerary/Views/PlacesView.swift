@@ -12,6 +12,8 @@ struct PlacesView: View {
     @State private var searchText = ""
     @State private var editingPlace: Place?
     @State private var isAddingPlace = false
+    /// Size of the category icon's circle. Scales with Dynamic Type so the symbol stays inside it.
+    @ScaledMetric(relativeTo: .body) private var iconSize: CGFloat = 32
 
     /// Places matching the search text by name or address. An empty search matches everything.
     private var filteredPlaces: [Place] {
@@ -95,16 +97,18 @@ struct PlacesView: View {
             Text(place.name)
                 .font(.headline)
             ForEach(place.issues, id: \.self) { issue in
-                HStack {
-                    Label(issue, systemImage: "exclamationmark.triangle.fill")
-                        .font(.footnote)
-                        .foregroundStyle(Color("Warning"))
-                    Spacer()
-                    // Fix opens the editor, where every issue type can be corrected.
-                    Button("Fix") { editingPlace = place }
-                        .buttonStyle(.bordered)
-                    Button("Remove", role: .destructive) { delete([place]) }
-                        .buttonStyle(.bordered)
+                // Issue and buttons on one line when they fit; at large Dynamic Type sizes
+                // the buttons move below the issue instead of squeezing its text.
+                ViewThatFits(in: .horizontal) {
+                    HStack {
+                        issueLabel(issue)
+                        Spacer()
+                        reviewButtons(for: place)
+                    }
+                    VStack(alignment: .leading, spacing: 6) {
+                        issueLabel(issue)
+                        reviewButtons(for: place)
+                    }
                 }
                 .controlSize(.small)
             }
@@ -114,33 +118,44 @@ struct PlacesView: View {
         .alignmentGuide(.listRowSeparatorLeading) { _ in 0 }
     }
 
+    private func issueLabel(_ issue: String) -> some View {
+        Label(issue, systemImage: "exclamationmark.triangle.fill")
+            .font(.footnote)
+            .foregroundStyle(Color("Warning"))
+    }
+
+    private func reviewButtons(for place: Place) -> some View {
+        HStack {
+            // Fix opens the editor, where every issue type can be corrected.
+            Button("Fix") { editingPlace = place }
+                .buttonStyle(.bordered)
+                // Several rows have "Fix" and "Remove" buttons, so VoiceOver needs the place name to tell them apart.
+                .accessibilityLabel("Fix \(place.name)")
+            Button("Remove", role: .destructive) { delete([place]) }
+                .buttonStyle(.bordered)
+                .accessibilityLabel("Remove \(place.name)")
+        }
+    }
+
     private func placeRow(_ place: Place) -> some View {
-        HStack(spacing: 12) {
-            Image(systemName: place.category.symbolName)
-                .foregroundStyle(Color.accentColor)
-                .frame(width: 32, height: 32)
-                .background(Color("AccentSoft"), in: Circle())
-                .accessibilityHidden(true)
-
-            VStack(alignment: .leading, spacing: 2) {
-                Text(place.name)
-                if let address = place.address {
-                    Text(address)
-                        .font(.footnote)
-                        .foregroundStyle(.secondary)
-                }
+        // Badge at the trailing edge when it fits; at large Dynamic Type sizes it moves under the address.
+        ViewThatFits(in: .horizontal) {
+            HStack(spacing: 12) {
+                placeIcon(place)
+                placeDetails(place)
+                Spacer()
+                placeBadge(place)
             }
-
-            Spacer()
-
-            if place.needsReview {
-                StatusBadge(status: .needsReview)
-            } else if place.isVerified {
-                StatusBadge(status: .verified)
+            HStack(alignment: .top, spacing: 12) {
+                placeIcon(place)
+                VStack(alignment: .leading, spacing: 6) {
+                    placeDetails(place)
+                    placeBadge(place)
+                }
+                Spacer(minLength: 0)
             }
         }
-        // A List starts a row's separator at its Label's text, so rows with a StatusBadge got a
-        // shorter separator than rows without one. Pin every row's separator to the leading edge.
+        // Start every row's separator at the leading edge, so all rows match whatever they contain.
         .alignmentGuide(.listRowSeparatorLeading) { _ in 0 }
         // Only admins can open the editor; for everyone else the row is read-only.
         .contentShape(Rectangle())
@@ -149,6 +164,34 @@ struct PlacesView: View {
         }
         .accessibilityElement(children: .combine)
         .accessibilityAddTraits(session.isAdmin ? .isButton : [])
+    }
+
+    private func placeIcon(_ place: Place) -> some View {
+        Image(systemName: place.category.symbolName)
+            .foregroundStyle(Color.accentColor)
+            .frame(width: iconSize, height: iconSize)
+            .background(Color("AccentSoft"), in: Circle())
+            .accessibilityHidden(true)
+    }
+
+    private func placeDetails(_ place: Place) -> some View {
+        VStack(alignment: .leading, spacing: 2) {
+            Text(place.name)
+            if let address = place.address {
+                Text(address)
+                    .font(.footnote)
+                    .foregroundStyle(.secondary)
+            }
+        }
+    }
+
+    @ViewBuilder
+    private func placeBadge(_ place: Place) -> some View {
+        if place.needsReview {
+            StatusBadge(status: .needsReview)
+        } else if place.isVerified {
+            StatusBadge(status: .verified)
+        }
     }
 
     private func delete(_ placesToDelete: [Place]) {

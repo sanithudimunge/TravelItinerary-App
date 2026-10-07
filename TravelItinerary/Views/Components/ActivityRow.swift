@@ -5,11 +5,24 @@ import SwiftUI
 struct ActivityRow: View {
     let activity: Activity
 
+    /// Size of the category icon's circle. Scales with Dynamic Type so the symbol stays inside it.
+    @ScaledMetric(relativeTo: .headline) private var iconSize: CGFloat = 36
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
+
+    /// Icon beside the text normally; icon above the text at accessibility sizes, where a side-by-side
+    /// icon leaves the text so little width that words break mid-word. ViewThatFits isn't used here
+    /// because it measures text unwrapped, so any long title would switch the layout even at normal sizes.
+    private var layout: AnyLayout {
+        dynamicTypeSize.isAccessibilitySize
+            ? AnyLayout(VStackLayout(alignment: .leading, spacing: 8))
+            : AnyLayout(HStackLayout(alignment: .top, spacing: 12))
+    }
+
     var body: some View {
-        HStack(alignment: .top, spacing: 12) {
+        layout {
             Image(systemName: activity.category.symbolName)
                 .foregroundStyle(Color.accentColor)
-                .frame(width: 36, height: 36)
+                .frame(width: iconSize, height: iconSize)
                 .background(Color("AccentSoft"), in: Circle())
                 .accessibilityHidden(true)
 
