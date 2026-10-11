@@ -40,7 +40,7 @@ struct SeedLoader {
         let start = calendar.startOfDay(for: .now)
         guard let end = calendar.date(byAdding: .day, value: 2, to: start) else { return }
 
-        let trip = Trip(title: "Sri Lanka Highlights", startDate: start, endDate: end)
+        let trip = Trip(title: "Sri Lanka Highlights", startDate: start, endDate: end, countryCodes: ["LK"])
         context.insert(trip)
         trip.generateDays()
 

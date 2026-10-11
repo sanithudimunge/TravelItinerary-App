@@ -19,14 +19,21 @@ struct TripListView: View {
                         Button("New Trip") { isAddingTrip = true }
                     }
                 } else {
+                    // Still a List (not a ScrollView) so swipe-to-delete keeps working on the cards.
                     List {
                         ForEach(trips) { trip in
                             NavigationLink(value: trip) {
-                                TripRow(trip: trip)
+                                TripCard(trip: trip)
                             }
+                            // The card is the whole row, so it doesn't need the list's chevron.
+                            .navigationLinkIndicatorVisibility(.hidden)
+                            .listRowBackground(Color.clear)
+                            .listRowSeparator(.hidden)
+                            .listRowInsets(EdgeInsets(top: 8, leading: 16, bottom: 8, trailing: 16))
                         }
                         .onDelete(perform: deleteTrips)
                     }
+                    .listStyle(.plain)
                 }
             }
             .navigationTitle("Trips")
@@ -48,25 +55,6 @@ struct TripListView: View {
         for index in offsets {
             modelContext.delete(trips[index])
         }
-    }
-}
-
-/// A row summarising a trip's title, dates and length.
-private struct TripRow: View {
-    let trip: Trip
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 4) {
-            Text(trip.title)
-                .font(.headline)
-            Text("\(trip.startDate.formatted(date: .abbreviated, time: .omitted)) – \(trip.endDate.formatted(date: .abbreviated, time: .omitted))")
-                .font(.subheadline)
-                .foregroundStyle(.secondary)
-            Text("^[\(trip.dayCount) day](inflect: true)")
-                .font(.footnote)
-                .foregroundStyle(.secondary)
-        }
-        .padding(.vertical, 2)
     }
 }
 

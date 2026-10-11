@@ -9,6 +9,9 @@ nonisolated final class Trip {
     var startDate: Date
     var endDate: Date
     var owner: User?
+    /// Countries visited, as ISO region codes (see `Country`), in the order the user picked them.
+    /// Defaults to empty so existing trips load without a migration.
+    var countryCodes: [String] = []
 
     @Relationship(deleteRule: .cascade, inverse: \Day.trip)
     var days: [Day]
@@ -49,11 +52,12 @@ nonisolated final class Trip {
         }
     }
 
-    init(id: UUID = UUID(), title: String, startDate: Date, endDate: Date, owner: User? = nil, days: [Day] = []) {
+    init(id: UUID = UUID(), title: String, startDate: Date, endDate: Date, countryCodes: [String] = [], owner: User? = nil, days: [Day] = []) {
         self.id = id
         self.title = title
         self.startDate = startDate
         self.endDate = endDate
+        self.countryCodes = countryCodes
         self.owner = owner
         self.days = days
     }
