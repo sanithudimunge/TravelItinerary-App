@@ -9,6 +9,12 @@ struct DayRouteMapView: View {
     @State private var isLoading = false
     /// The legs sheet is always shown while this screen is; it's turned off on the way out so it closes with it.
     @State private var isShowingLegs = true
+    /// Supplies the distance unit for the route total.
+    private var preferences = AppPreferences()
+
+    init(viewModel: ItineraryViewModel) {
+        self.viewModel = viewModel
+    }
 
     /// The day's stops that have a valid location, in visiting order.
     private var stops: [StopSnapshot] {
@@ -47,11 +53,9 @@ struct DayRouteMapView: View {
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
-                Menu("Open in…", systemImage: "arrow.up.forward.app") {
-                    Button("Apple Maps") { MapsLauncher.openDayInAppleMaps(stops) }
-                    Button("Google Maps") { MapsLauncher.openDayInGoogleMaps(stops) }
-                }
-                .disabled(stops.isEmpty)
+                // A direct button or an Apple/Google menu, depending on the map app chosen in Settings.
+                OpenInMapsControl(target: .day(stops))
+                    .disabled(stops.isEmpty)
             }
         }
         .sheet(isPresented: $isShowingLegs) {
@@ -96,7 +100,7 @@ struct DayRouteMapView: View {
             }
             if let route = viewModel.route {
                 Section {
-                    LabeledContent("Total", value: "\(LegRow.timeText(route.totalTime)) · \(LegRow.distanceText(route.totalDistance))")
+                    LabeledContent("Total", value: "\(LegRow.timeText(route.totalTime)) · \(preferences.distanceUnit.format(route.totalDistance))")
                         .font(.headline)
                 }
                 Section("Legs") {

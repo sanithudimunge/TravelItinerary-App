@@ -7,6 +7,12 @@ struct LegRow: View {
 
     /// Width of the mode icon column. Scales with Dynamic Type so the icon isn't clipped.
     @ScaledMetric(relativeTo: .subheadline) private var iconWidth: CGFloat = 28
+    /// Supplies the distance unit chosen in Settings.
+    private var preferences = AppPreferences()
+
+    init(leg: RouteLeg) {
+        self.leg = leg
+    }
 
     var body: some View {
         HStack(spacing: 12) {
@@ -18,7 +24,7 @@ struct LegRow: View {
             VStack(alignment: .leading, spacing: 2) {
                 Text("\(leg.from.name) → \(leg.to.name)")
                     .font(.subheadline)
-                Text("\(Self.timeText(leg.travelTime)) · \(Self.distanceText(leg.distance))")
+                Text("\(Self.timeText(leg.travelTime)) · \(preferences.distanceUnit.format(leg.distance))")
                     .font(.footnote)
                     .foregroundStyle(.secondary)
             }
@@ -29,12 +35,6 @@ struct LegRow: View {
     /// Formats a duration like "1 hr, 25 min".
     static func timeText(_ time: TimeInterval) -> String {
         Duration.seconds(time).formatted(.units(allowed: [.hours, .minutes], width: .abbreviated))
-    }
-
-    /// Formats a distance in the user's preferred units, e.g. "2.4 km" or "1.5 mi".
-    static func distanceText(_ distance: CLLocationDistance) -> String {
-        Measurement(value: distance, unit: UnitLength.meters)
-            .formatted(.measurement(width: .abbreviated, usage: .road))
     }
 }
 

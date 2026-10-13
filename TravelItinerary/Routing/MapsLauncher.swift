@@ -4,6 +4,25 @@ import UIKit
 
 /// Hands stops off to the Apple Maps or Google Maps app for turn-by-turn navigation.
 enum MapsLauncher {
+    /// What to open: directions through a whole day, or a single place.
+    enum Target {
+        case day([StopSnapshot])
+        case place(StopSnapshot)
+    }
+
+    /// Opens the target in the given app.
+    /// `.askEachTime` isn't an app, so callers resolve it (by asking the user) before calling this.
+    static func open(_ target: Target, in app: MapApp) {
+        switch (app, target) {
+        case (.appleMaps, .day(let stops)): openDayInAppleMaps(stops)
+        case (.appleMaps, .place(let stop)): openPlaceInAppleMaps(stop)
+        case (.googleMaps, .day(let stops)): openDayInGoogleMaps(stops)
+        case (.googleMaps, .place(let stop)): openPlaceInGoogleMaps(stop)
+        case (.askEachTime, _):
+            assertionFailure("Resolve .askEachTime to a specific app before opening")
+        }
+    }
+
     // MARK: Apple Maps
 
     /// Opens Apple Maps with directions through every stop, in order.

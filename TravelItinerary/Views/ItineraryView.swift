@@ -98,10 +98,7 @@ struct ItineraryView: View {
                     .contextMenu {
                         // Only offered when the activity has a valid location to hand off.
                         if let stop = activity.snapshot() {
-                            Menu("Open in…", systemImage: "arrow.up.forward.app") {
-                                Button("Apple Maps") { MapsLauncher.openPlaceInAppleMaps(stop) }
-                                Button("Google Maps") { MapsLauncher.openPlaceInGoogleMaps(stop) }
-                            }
+                            OpenInMapsControl(target: .place(stop))
                         }
                     }
                 }
