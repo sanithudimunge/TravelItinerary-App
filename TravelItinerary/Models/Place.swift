@@ -13,6 +13,10 @@ nonisolated final class Place: Mappable {
     var address: String?
     /// The original category text from the seed file when it didn't match `ActivityCategory`, otherwise `nil`.
     var invalidCategory: String? = nil
+    /// The country the place is in, as an ISO region code (see `Country`), or `nil` if unknown.
+    var countryCode: String? = nil
+    /// Marked by the user with the heart button. Defaults to `false`, so existing places load unchanged.
+    var isFavourite: Bool = false
 
     /// Activities at this place. Deleting the place sets their `place` to `nil`.
     @Relationship(deleteRule: .nullify, inverse: \Activity.place)
@@ -49,12 +53,13 @@ nonisolated final class Place: Mappable {
         !issues.isEmpty
     }
 
-    init(name: String, latitude: Double, longitude: Double, category: ActivityCategory, isVerified: Bool = false, address: String? = nil) {
+    init(name: String, latitude: Double, longitude: Double, category: ActivityCategory, isVerified: Bool = false, address: String? = nil, countryCode: String? = nil) {
         self.name = name
         self.latitude = latitude
         self.longitude = longitude
         self.category = category
         self.isVerified = isVerified
         self.address = address
+        self.countryCode = countryCode
     }
 }

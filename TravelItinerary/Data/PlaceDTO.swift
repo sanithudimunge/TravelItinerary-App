@@ -7,17 +7,21 @@ struct PlaceDTO: Decodable {
     let lon: Double
     let category: String
     let address: String?
+    /// Optional ISO region code, e.g. "LK". Entries without one use the loader's default country.
+    let country: String?
 
     /// Converts the decoded data into a `Place` model.
     /// Missing names and unknown categories get fallbacks so the place can still be reviewed by an admin.
-    func makeModel() -> Place {
+    /// `defaultCountryCode` fills in the country for entries that don't name one.
+    func makeModel(defaultCountryCode: String? = nil) -> Place {
         let knownCategory = ActivityCategory(rawValue: category)
         let place = Place(
             name: name ?? "Unnamed place",
             latitude: lat,
             longitude: lon,
             category: knownCategory ?? .sight,
-            address: address
+            address: address,
+            countryCode: country ?? defaultCountryCode
         )
         // Keep the original text so the fallback to `.sight` shows up as an issue instead of being silent.
         if knownCategory == nil {

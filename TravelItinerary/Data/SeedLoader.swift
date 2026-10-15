@@ -16,7 +16,8 @@ struct SeedLoader {
             throw SeedError.missingResource("places.json")
         }
         let data = try Data(contentsOf: url)
-        let places = try JSONDecoder().decode([PlaceDTO].self, from: data).map { $0.makeModel() }
+        // Every place in the bundled seed file is in Sri Lanka, so they all get "LK".
+        let places = try JSONDecoder().decode([PlaceDTO].self, from: data).map { $0.makeModel(defaultCountryCode: "LK") }
         places.forEach { context.insert($0) }
 
         insertSampleTrip(into: context, places: places)
